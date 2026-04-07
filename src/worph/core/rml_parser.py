@@ -232,6 +232,17 @@ def parse_rml(path: str, *, file_path_override: str | None = None, db_url: str |
                 [_u(RML, "referenceFormulation"), _u(RML_OLD, "referenceFormulation")],
             )
             query = _first(graph, logical_source, [_u(RML, "query"), _u(RML_OLD, "query")])
+            table_name = graph.value(logical_source, _u(RR, "tableName"))
+            sql_query = graph.value(logical_source, _u(RR, "sqlQuery"))
+            sql_version = graph.value(logical_source, _u(RR, "sqlVersion"))
+            if sql_query is not None and query is None:
+                query = str(sql_query)
+            elif table_name is not None and query is None:
+                query = f"SELECT * FROM {table_name}"
+            if source is None and db_url:
+                source = db_url
+            if reference_formulation is None and (table_name is not None or sql_query is not None or sql_version is not None):
+                reference_formulation = "sql2008"
         else:
             source = db_url
             table_name = graph.value(logical_table, _u(RR, "tableName"))

@@ -1,0 +1,121 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - rewrite/**
+  pull_request:
+
+jobs:
+  test-and-examples:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Install dependencies
+        run: |
+          uv sync --extra test
+          uv pip install pandas pyarrow
+
+      - name: Install package
+        run: uv pip install -e .
+
+      - name: Create CI compatibility shim (morph_kgc -> worph)
+        run: |
+          mkdir -p .ci_shims/morph_kgc
+          cat > .ci_shims/morph_kgc/__init__.py <<'PY'
+          from worph import *
+          PY
+          cat > .ci_shims/morph_kgc/__main__.py <<'PY'
+          from worph.__main__ import main
+          if __name__ == "__main__":
+              raise SystemExit(main())
+          PY
+
+      - name: Run all tests
+        env:
+          PYTHONPATH: .ci_shims:src
+        run: |
+          pytest -q
+
+      - name: Prepare example fixtures
+        run: |
+          python - <<'PY'
+          import sqlite3
+          from pathlib import Path
+          import pandas as pd
+
+          # postgres example local sqlite DB
+          pdb = Path("examples/postgres/example.db")
+          pdb.parent.mkdir(parents=True, exist_ok=True)
+          con = sqlite3.connect(pdb)
+          con.execute("DROP TABLE IF EXISTS postgres_tablename")
+          con.execute("CREATE TABLE postgres_tablename (id TEXT)")
+          con.executemany("INSERT INTO postgres_tablename (id) VALUES (?)", [("1",), ("2",), ("3",)])
+          con.commit()
+          con.close()
+
+          # rdb example local sqlite DB built from CSV sample files
+          gdb = Path("examples/rdb/gtfs.db")
+          if gdb.exists():
+              gdb.unlink()
+          con = sqlite3.connect(gdb)
+          base = Path("examples/csv/data")
+          for name in [
+              "STOP_TIMES",
+              "TRIPS",
+              "ROUTES",
+              "AGENCY",
+              "STOPS",
+              "CALENDAR",
+              "CALENDAR_DATES",
+              "FEED_INFO",
+              "SHAPES",
+              "FREQUENCIES",
+          ]:
+              csv_path = base / f"{name}.csv"
+              if csv_path.exists():
+                  df = pd.read_csv(csv_path)
+                  df.to_sql(name, con, index=False, if_exists="replace")
+          con.close()
+
+          # s3_parquet example local parquet file
+          parquet_path = Path("examples/s3_parquet/data.parquet")
+          parquet_path.parent.mkdir(parents=True, exist_ok=True)
+          pd.DataFrame({"id": [1, 2, 3]}).to_parquet(parquet_path, index=False)
+          PY
+
+      - name: Run example matrix
+        env:
+          PYTHONPATH: .ci_shims:src
+        run: |
+          set -euo pipefail
+
+          run_example() {
+            name="$1"
+            shift
+            echo "== $name =="
+            "$@"
+          }
+
+          run_example "csv-config" python -m worph examples/csv/config.ini
+          run_example "json-config" python -m worph examples/json/config.ini
+          run_example "xml-config" python -m worph examples/xml/config.ini
+          run_example "postgres-config" python -m worph examples/postgres/config.ini
+          run_example "rdb-config" bash -lc 'cd examples/rdb && python -m worph config.ini'
+          run_example "s3-parquet-config" python -m worph examples/s3_parquet/config.ini
+          run_example "dataframe-script" python examples/dataframe/kg_generation.py
+          run_example "dict-script" python examples/dict/kg_generation.py
+          run_example "dynamic-api-token" python examples/dynamic_api_token.py
