@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from morph_kgc.core.model import FnmlCall
+from worph.core.model import FnmlCall
 
 from .evaluator import FunctionEvaluator
 from .registry import UnknownFunctionError, configure_default_registry

@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from morph_kgc.fnml.engine import evaluate_fnml_call
+from worph.fnml.engine import evaluate_fnml_call
 
 from .model import TermMap
 from .sources import Record, reference_value

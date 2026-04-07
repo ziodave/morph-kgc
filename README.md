@@ -1,4 +1,4 @@
-# morph-kgc v2 rewrite branch
+# worph v2 rewrite branch
 
 This branch is a clean-slate rewrite baseline.
 
@@ -7,4 +7,4 @@ Retained assets:
 - `specs/` planning and contracts
 - `AGENTS.md`
 
-New implementation starts under `src/morph_kgc/`.
+Primary implementation lives under `src/worph/`.

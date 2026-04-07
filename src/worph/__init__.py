@@ -1,4 +1,4 @@
-"""morph_kgc v2 rewrite package."""
+"""worph v2 rewrite package."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from pathlib import Path
 
 from pyoxigraph import Store
 
-from morph_kgc.materializer import materialize_from_config
+from worph.materializer import materialize_from_config
 
 
 

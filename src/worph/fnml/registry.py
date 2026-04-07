@@ -84,7 +84,7 @@ def _load_udfs(udf_paths: list[str]) -> dict[str, Any]:
     for idx, udf_path in enumerate(udf_paths):
         if not Path(udf_path).exists():
             continue
-        module_name = f"morph_kgc_udf_{idx}"
+        module_name = f"worph_udf_{idx}"
         code = Path(udf_path).read_text(encoding="utf-8")
         module = ModuleType(module_name)
         sys.modules[module_name] = module

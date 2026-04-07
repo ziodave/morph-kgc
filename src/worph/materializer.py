@@ -5,13 +5,13 @@ from pathlib import Path
 from rdflib import Graph
 from rdflib.namespace import RDF
 
-from morph_kgc.core.config import parse_runtime_config
-from morph_kgc.core.emitter import emit_triple, render_node
-from morph_kgc.core.loader import load_mapping
-from morph_kgc.core.model import MappingDocument, ObjectMapSpec
-from morph_kgc.core.sources import Record, iter_records, reference_value
-from morph_kgc.core.term_map import render_term_map
-from morph_kgc.fnml.engine import evaluate_fnml_call, configure_udfs
+from worph.core.config import parse_runtime_config
+from worph.core.emitter import emit_triple, render_node
+from worph.core.loader import load_mapping
+from worph.core.model import MappingDocument, ObjectMapSpec
+from worph.core.sources import Record, iter_records, reference_value
+from worph.core.term_map import render_term_map
+from worph.fnml.engine import evaluate_fnml_call, configure_udfs
 
 
 
